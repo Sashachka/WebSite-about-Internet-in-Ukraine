@@ -1,0 +1,226 @@
+/* Base reset + global defaults */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* Page shell: header / nav / main / footer*/
+header {
+  background: #ffffff;
+  color: #000000;
+  padding: 1rem;
+  text-align: center;
+}
+
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: white;           
+  border-bottom: 1px solid #eee;
+}
+
+nav ul {
+  list-style: none;
+  display: flex;
+  justify-content: space-around;
+}
+
+nav a {
+  text-decoration: none;
+  color: #956b6b;
+}
+
+main {
+  flex: 1;
+  padding: 10;
+}
+
+footer {
+  background: #101010;
+  color: #fff;
+  text-align: center;
+  padding: 1rem;
+}
+
+/* Text / content helpers */
+
+mark.hit {
+  background: #ffce6b;
+  padding: 0 2px;
+  border-radius: 4px;
+}
+
+.title {
+  color: #000000;
+}
+
+h2, h3 {
+  scroll-margin-top: 90px;
+}
+
+/* Home cards (avatar + text) component */
+
+.home-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas: "avatar text";
+  gap: clamp(5px, 2vw, 14px);
+  align-items: center;
+  width: 100%;
+}
+
+.home-card .avatar { grid-area: avatar; }
+.home-card .sideText {
+  grid-area: text;
+  min-width: 0;
+}
+
+.home-cards .home-card:nth-child(even) {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "text avatar";
+}
+
+.avatar {
+  width: clamp(120px, 35vw, 400px);
+  height: clamp(120px, 35vw, 400px);
+  border-radius: 50%;
+  background: #ddd;
+}
+
+.sideText {
+  min-height: clamp(159px, 35vw, 271px);
+  display: flex;
+  flex-direction: column;
+  justify-content: start;
+}
+
+.sideText a {
+  display: block;
+  padding: clamp(6px, 1.2vw, 10px) 0;
+  text-decoration: none;
+  font-size: clamp(14px, 3vw, 30px);
+}
+
+/* Pager / buttons */
+.pager {
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  text-decoration: none;
+  color: inherit;
+  background: #fff;
+  transition: transform .08s ease, background .2s ease;
+}
+
+.btn:hover { background: #f6f6f6; }
+.btn:active { transform: scale(.98); }
+
+.btn.disabled {
+  pointer-events: none;
+  opacity: .5;
+}
+
+.page-label {
+  opacity: .75;
+  font-size: .95rem;
+}
+
+/* 3-column layout with left & right sticky sidebars */
+
+.layout {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+
+  display: grid;
+  grid-template-columns: 190px minmax(0, 1fr) 190px;
+  gap: 10px;
+  align-items: start;
+  align-content: start;
+}
+
+.sidebar {
+  position: sticky;
+  top: 14px;
+  height: fit-content;
+}
+
+.sidebox {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 8px;
+  background: #fff;
+}
+
+.sidebox h3 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+}
+
+.sidebox ul {
+  margin: 0;
+  padding-left: 14px;
+}
+
+.sidebox a {
+  text-decoration: none;
+}
+.sidebox a:hover {
+  text-decoration: underline;
+}
+
+.content {
+  min-width: 0;
+  max-width: 760px;
+  justify-self: center;
+}
+
+.sidebar.left { grid-column: 1; }
+.content { grid-column: 2; }
+.sidebar.right { grid-column: 3; }
+
+#app > :first-child { margin-top: 0; }
+
+/*Responsive behavior*/
+
+@media (max-width: 1100px) {
+  .layout {
+    grid-template-columns: 240px 1fr;
+  }
+  .sidebar.right {
+    display: none;
+  }
+}
+
+@media (max-width: 850px) {
+  .layout {
+    grid-template-columns: 1fr;
+  }
+  .sidebar {
+    position: static;
+  }
+  .content {
+    max-width: 100%;
+    justify-self: stretch;
+  }
+}

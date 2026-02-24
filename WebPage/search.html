@@ -1,0 +1,236 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wireframe Template</title>
+    <link rel="stylesheet" href="styles.css">
+    <style> 
+      /* Center for search*/
+.search-wrap{
+  max-width: 760px;
+  margin: 24px auto;
+  padding: 0 10px;
+}
+
+/* align input + button */
+.search-bar{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin: 12px 0 16px;
+}
+
+/* input should stretch */
+#q{
+  flex: 1;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+}
+
+.search-bar button{
+  padding: 10px 14px;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  background: #fff;
+  cursor: pointer;
+}
+.search-bar button:hover{ background: #f6f6f6; }
+
+/* output spacing */
+#out{
+  margin-top: 10px;
+}
+  </style>
+ 
+    
+</head>
+<body>
+    <header>
+        <h1>Search</h1>
+    </header>
+    <nav>
+        <ul>
+            <li><a href="home.html">Home</a></li>
+            <li><a href="search.html">Search</a></li>
+            <li><a href="page1.html">Articles</a></li>
+            <li><a href="profile.html">Profile</a></li>
+        </ul>
+    </nav>
+  
+    <main>
+      
+        <section class="search-wrap">
+    <h2>Search across articles</h2>
+
+    <div class="search-bar">
+      <input id="q" placeholder="Search..." />
+      <button type="button" onclick="runSearch()">Search</button>
+    </div>
+
+    <div id="out"></div>
+  </section>
+      
+      <script>
+  const TOTAL_PAGES = 5;
+  const JSON_BASE = "content/internet-ukraine-pages";
+  const PAGE_HTML = (n) => `page${n}.html`;
+  const PAGE_JSON = (n) => `${JSON_BASE}/page${n}.json`;
+
+  let pages = null; // [{page:1, data:{...}}, ...]
+
+  async function loadAllPages() {
+    const tasks = [];
+    for (let p = 1; p <= TOTAL_PAGES; p++) {
+      tasks.push(
+        fetch(PAGE_JSON(p), { cache: "no-store" })
+          .then(res => {
+            if (!res.ok) throw new Error(`Failed page ${p}: ${res.status}`);
+            return res.json();
+          })
+          .then(data => ({ page: p, data }))
+      );
+    }
+    pages = await Promise.all(tasks);
+  }
+
+  function escapeHtml(s = "") {
+    return String(s)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  // same thins is in script.js
+  function slugify(text = "") {
+    return text
+      .toLowerCase()
+      .trim()
+      .replace(/['"]/g, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "");
+  }
+
+  // snippet around match
+  function makeSnippet(text, q, radius = 60) {
+    const lower = text.toLowerCase();
+    const idx = lower.indexOf(q);
+    if (idx === -1) return null;
+
+    const start = Math.max(0, idx - radius);
+    const end = Math.min(text.length, idx + q.length + radius);
+
+    let snippet = text.slice(start, end);
+    if (start > 0) snippet = "..." + snippet;
+    if (end < text.length) snippet = snippet + "...";
+
+    // highlight first occurrence
+    const originalPart = text.slice(idx, idx + q.length);
+    snippet = snippet.replace(originalPart, `[${originalPart}]`);
+
+    return snippet;
+  }
+
+  function searchPage(pageData, query, limitPerPage = 20) {
+    const q = query.trim().toLowerCase();
+    const results = [];
+    if (!q) return results;
+
+    //last seen heading
+    let currentAnchor = "";
+
+    const blocks = (pageData?.content || []);
+
+    for (let i = 0; i < blocks.length; i++) {
+      if (results.length >= limitPerPage) break;
+
+      const b = blocks[i];
+      if (!b) continue;
+
+      if (b.type === "h2" && b.text) currentAnchor = `h2-${slugify(b.text)}`;
+      if (b.type === "h3" && b.text) currentAnchor = `h3-${slugify(b.text)}`;
+
+      // check text fields
+      const textFields = [];
+      if (typeof b.text === "string") textFields.push(b.text);
+      if (Array.isArray(b.items)) {
+        for (const it of b.items) {
+          if (typeof it === "string") textFields.push(it);
+        }
+      }
+
+      for (const t of textFields) {
+        if (results.length >= limitPerPage) break;
+        if (t.toLowerCase().includes(q)) {
+          results.push({
+            anchor: currentAnchor,       // can be"" if no heading
+            snippet: makeSnippet(t, q) || (t.slice(0, 120) + (t.length > 120 ? "..." : "")),
+          });
+        }
+      }
+    }
+
+    return results;
+  }
+
+  async function runSearch() {
+    const out = document.getElementById("out");
+    out.textContent = "Searching...";
+
+    try {
+      if (!pages) await loadAllPages();
+
+      const query = document.getElementById("q").value.trim();
+      if (!query) {
+        out.textContent = "Type something to search.";
+        return;
+      }
+
+      const all = [];
+      for (const pg of pages) {
+        const hits = searchPage(pg.data, query, 20).map(h => ({
+          page: pg.page,
+          ...h
+        }));
+        all.push(...hits);
+      }
+
+      if (!all.length) {
+        out.textContent = "No matches";
+        return;
+      }
+
+
+      // for rendering clickable results
+      const html = all.map((m, idx) => {
+        const href = m.anchor
+  ? `${PAGE_HTML(m.page)}?q=${encodeURIComponent(query)}#${m.anchor}`
+  : `${PAGE_HTML(m.page)}?q=${encodeURIComponent(query)}`;
+
+        return `
+          <div style="padding:8px 0; border-bottom:1px solid #eee;">
+            <div><b>${idx + 1})</b> <a href="${href}">Page ${m.page}</a></div>
+            <div style="white-space:pre-wrap;">${escapeHtml(m.snippet)}</div>
+          </div>
+        `;
+      }).join("");
+
+      out.innerHTML = html;
+    } catch (err) {
+      out.textContent = "Error: " + err.message;
+    }
+
+  }
+</script>
+
+        
+    </main>
+    <footer>
+        <p>&copy; 2024 Community Skills Exchange</p>
+    </footer>
+</body>
+</html>

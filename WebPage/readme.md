@@ -1,0 +1,2 @@
+Page 5 content and so profile text box are linked. First "activate" server in terminal(like for Rest API a sit is rest api) and then it should work.
+If by any chance it doesn;t work here is link for page in gitHub also version will be a lit bit different.

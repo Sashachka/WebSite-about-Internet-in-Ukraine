@@ -1,0 +1,245 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Page</title>
+  <link rel="stylesheet" href="styles.css" />
+
+  <style>
+    .profile-page {
+      padding: 18px;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .profile-page .profile-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    @media (min-width: 800px) {
+      .profile-page .profile-grid.two {
+        grid-template-columns: 1.2fr 0.8fr;
+        align-items: start;
+      }
+    }
+
+    .profile-page .card {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 12px;
+      padding: 16px;
+    }
+
+    .profile-page .badge {
+      display: inline-block;
+      background: #f2f2ff;
+      border: 1px solid #e6e6ff;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      margin-bottom: 8px;
+    }
+
+    .profile-page .name {
+      margin: 0;
+      font-size: 1.5rem;
+      color: #000;
+    }
+
+    .profile-page .meta {
+      margin-top: 6px;
+      color: #445151;
+    }
+
+
+    .profile-page h2 {
+      margin: 0 0 10px;
+      font-size: 1.1rem;
+    }
+
+    .profile-page p {
+      margin: 0;
+      line-height: 1.6;
+      color: #445151;
+    }
+
+    .profile-page .help {
+      margin-top: 6px;
+      font-size: 0.95rem;
+      color: #666;
+    }
+
+    .profile-page label {
+      display: block;
+      font-weight: 600;
+      margin: 10px 0 6px;
+    }
+
+    .profile-page textarea {
+      width: 100%;
+      min-height: 160px;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      font: inherit;
+      resize: vertical;
+      background: #fff;
+    }
+
+    .profile-page .btns {
+      margin-top: 10px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .profile-page .btnLike {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid #ddd;
+      background: #fff;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .profile-page .btnLike.primary {
+      background: #956b6b;
+      color: #fff;
+      border-color: #956b6b;
+    }
+
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>User Page</h1>
+  </header>
+
+  <nav>
+    <ul>
+      <li><a href="home.html">Home</a></li>
+      <li><a href="search.html">Search</a></li>
+      <li><a href="page1.html">Articles</a></li>
+      <li><a href="profile.html">Profile</a></li>
+    </ul>
+  </nav>
+
+  <!-- IMPORTANT: wrapper class -->
+  <main class="profile-page">
+    <div class="profile-grid two">
+      <!-- LEFT -->
+      <section class="profile-grid">
+        <div class="card">
+          <span class="badge">Student</span>
+          <h2 class="name">Oleksandra Shkurnykova</h2>
+          <p class="meta">University of London • Computer Science</p>
+
+          </div>
+
+        <div class="card">
+          <h2>About</h2>
+          <p>
+            This site shows and tells history of the internet throught the time in Ukraine history. How it was made? What ideas were behind? What public don't know about it?
+            
+          </p>
+        </div>
+
+        <div class="card">
+          <h2>Want to know more?</h2>
+          <p>
+              Experiment and find your own information!
+              Your notes are saved and will appear on <b>Page 5</b>.
+          </p>
+        </div>
+      </section>
+
+      <aside class="card">
+        <h2>Add more thoughts</h2>
+        <p class="help">
+          Please note: all additional text will be added to <b>Page 5</b> permanently (saved in your browser).
+        </p>
+
+        <label for="notes">Your text</label>
+        <textarea id="notes" placeholder="Write your thoughts here..."></textarea>
+
+        <div class="btns">
+          <button type="button" class="btnLike primary" id="saveBtn">Save to Page 5</button>
+          <button type="button" class="btnLike" id="clearBtn">Clear box</button>
+        </div>
+
+        <div class="status" id="status">Saved ✅</div>
+      </aside>
+    </div>
+  </main>
+
+  <footer>
+    <small>© 2026 Your Website</small>
+  </footer>
+
+    
+    <script>
+  const API_URL = "http://localhost:3000/api/pages/5/notes";
+
+  const notesEl = document.getElementById("notes");
+  const statusEl = document.getElementById("status");
+  const saveBtn = document.getElementById("saveBtn");
+  const clearBtn = document.getElementById("clearBtn");
+
+  function showSaved(msg = "Saved ✅") {
+    statusEl.textContent = msg;
+    statusEl.style.display = "block";
+    clearTimeout(showSaved._t);
+    showSaved._t = setTimeout(() => (statusEl.style.display = "none"), 1400);
+  }
+
+        // laod note from server to show in the box
+  (async () => {
+    try {
+      const r = await fetch(API_URL, { cache: "no-store" });
+      const notes = await r.json();
+      if (Array.isArray(notes) && notes[0]?.text) {
+        notesEl.value = notes[0].text;
+      }
+    } catch (e) {
+      // ignore
+    }
+  })();
+
+  saveBtn.addEventListener("click", async () => {
+    const text = notesEl.value.trim();
+    if (!text) return;
+
+    try {
+      const r = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text })
+      });
+
+      if (!r.ok) {
+        const t = await r.text();
+        console.log("Save failed:", r.status, t);
+        showSaved("Error saving ❌");
+        return;
+      }
+
+      showSaved();
+    } catch (e) {
+      console.log("Save error:", e);
+      showSaved("Server offline ❌");
+    }
+  });
+
+  clearBtn.addEventListener("click", () => {
+    notesEl.value = "";
+    notesEl.focus();
+  });
+</script>
+</body>
+</html>
