@@ -124,7 +124,7 @@
     const page = getCurrentPageNumber();
     setupPager(page);
 
-    const JSON_URL = `/content/internet-ukraine-pages/page${page}.json`;
+    const JSON_URL = `content/internet-ukraine-pages/page${page}.json`;
 
     try {
       const res = await fetch(JSON_URL, { cache: "no-store" });
